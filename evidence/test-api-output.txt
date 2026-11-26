@@ -1,0 +1,110 @@
+==> 1. Health check (GET /health)
+{
+    "status": "ok",
+    "storage": "s3",
+    "bucket": "ticketing-serverless-035424195977"
+}
+==> 2. Create ticket (POST /events/event-test-1795683819/tickets)
+{
+    "ticketId": "idem-1795683819-1",
+    "eventId": "event-test-1795683819",
+    "holderName": "Natanael",
+    "holderContact": "081234567890",
+    "tier": "VIP",
+    "status": "reserved",
+    "signature": "3e5f27c591f0bd09bac29efb2a03f52f0717d527e9b64f6e28b74dac7833d7ee",
+    "expiresAt": "2026-11-26T09:33:43Z",
+    "checkedInAt": null,
+    "createdAt": "2026-11-26T09:03:43Z",
+    "updatedAt": "2026-11-26T09:03:43Z"
+}
+==> 3. Idempotency check (POST ulang dengan Idempotency-Key sama -> 200)
+HTTP 200
+==> 4. Get ticket detail & list (GET /events/event-test-1795683819/tickets)
+{
+    "ticketId": "idem-1795683819-1",
+    "eventId": "event-test-1795683819",
+    "holderName": "Natanael",
+    "holderContact": "081234567890",
+    "tier": "VIP",
+    "status": "reserved",
+    "signature": "3e5f27c591f0bd09bac29efb2a03f52f0717d527e9b64f6e28b74dac7833d7ee",
+    "expiresAt": "2026-11-26T09:33:43Z",
+    "checkedInAt": null,
+    "createdAt": "2026-11-26T09:03:43Z",
+    "updatedAt": "2026-11-26T09:03:43Z"
+}
+{
+    "eventId": "event-test-1795683819",
+    "tickets": [
+        {
+            "ticketId": "idem-1795683819-1",
+            "eventId": "event-test-1795683819",
+            "holderName": "Natanael",
+            "holderContact": "081234567890",
+            "tier": "VIP",
+            "status": "reserved",
+            "signature": "3e5f27c591f0bd09bac29efb2a03f52f0717d527e9b64f6e28b74dac7833d7ee",
+            "expiresAt": "2026-11-26T09:33:43Z",
+            "checkedInAt": null,
+            "createdAt": "2026-11-26T09:03:43Z",
+            "updatedAt": "2026-11-26T09:03:43Z"
+        }
+    ]
+}
+==> 5. Update holderName saat reserved (PUT -> 200)
+{
+    "ticketId": "idem-1795683819-1",
+    "eventId": "event-test-1795683819",
+    "holderName": "Natanael S.",
+    "holderContact": "081234567890",
+    "tier": "VIP",
+    "status": "reserved",
+    "signature": "3e5f27c591f0bd09bac29efb2a03f52f0717d527e9b64f6e28b74dac7833d7ee",
+    "expiresAt": "2026-11-26T09:33:43Z",
+    "checkedInAt": null,
+    "createdAt": "2026-11-26T09:03:43Z",
+    "updatedAt": "2026-11-26T09:03:47Z"
+}
+==> 6. Admin update status paid tanpa X-API-Key (harus 401)
+HTTP 401
+==> 7. Admin update status paid dengan X-API-Key (harus 200)
+{
+    "ticketId": "idem-1795683819-1",
+    "eventId": "event-test-1795683819",
+    "holderName": "Natanael S.",
+    "holderContact": "081234567890",
+    "tier": "VIP",
+    "status": "paid",
+    "signature": "3e5f27c591f0bd09bac29efb2a03f52f0717d527e9b64f6e28b74dac7833d7ee",
+    "expiresAt": "2026-11-26T09:33:43Z",
+    "checkedInAt": null,
+    "createdAt": "2026-11-26T09:03:43Z",
+    "updatedAt": "2026-11-26T09:03:49Z"
+}
+==> 8. Check-in dengan signature palsu (harus 403)
+HTTP 403
+==> 9. Check-in dengan signature valid (harus 200)
+{
+    "ticketId": "idem-1795683819-1",
+    "eventId": "event-test-1795683819",
+    "holderName": "Natanael S.",
+    "holderContact": "081234567890",
+    "tier": "VIP",
+    "status": "checked-in",
+    "signature": "3e5f27c591f0bd09bac29efb2a03f52f0717d527e9b64f6e28b74dac7833d7ee",
+    "expiresAt": "2026-11-26T09:33:43Z",
+    "checkedInAt": "2026-11-26T09:03:51Z",
+    "createdAt": "2026-11-26T09:03:43Z",
+    "updatedAt": "2026-11-26T09:03:51Z"
+}
+==> 10. Cancel tiket ke-2 dua kali (pertama 200, kedua 409)
+Cancel #1: HTTP 200
+Cancel #2: HTTP 409
+==> 11. Cek audit log asinkron di S3 (audit/event-test-1795683819/)
+2026-11-26 16:03:47        283 20261126T090346Z-idem-1795683819-1.json
+2026-11-26 16:03:49        283 20261126T090348Z-idem-1795683819-1.json
+2026-11-26 16:03:51        279 20261126T090350Z-idem-1795683819-1.json
+2026-11-26 16:03:53        285 20261126T090352Z-idem-1795683819-1.json
+2026-11-26 16:03:54        284 20261126T090353Z-idem-1795683819-2.json
+==> Semua tes end-to-end Track C selesai!
