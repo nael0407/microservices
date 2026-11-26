@@ -149,6 +149,19 @@ aws lambda add-permission \
   --function-url-auth-type NONE \
   --region "$REGION" >/dev/null
 
+aws lambda remove-permission \
+  --function-name "$API_FN" \
+  --statement-id "public-function-url-invoke" \
+  --region "$REGION" >/dev/null 2>&1 || true
+
+aws lambda add-permission \
+  --function-name "$API_FN" \
+  --statement-id "public-function-url-invoke" \
+  --action "lambda:InvokeFunction" \
+  --principal "*" \
+  --invoked-via-function-url \
+  --region "$REGION" >/dev/null
+
 cat <<EOF > "$ROOT_DIR/.env"
 AWS_REGION=$REGION
 BUCKET_NAME=$BUCKET_NAME
